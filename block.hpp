@@ -14,7 +14,8 @@ enum blockStatus {
 	EMPTY=1,
 	FULL,
 	PARTIAL_FULL,
-	MARKED_FOR_GC
+	MARKED_FOR_GC,
+	RESERVED
 };
 
 enum blockOverflowConfig {
@@ -44,6 +45,11 @@ class block {
 		int block_number;
 		enum blockOverflowConfig boc;
 		coder *C;
+		int current_physical_page;
+		int bage;
+		int access_count;
+		int erase_count;
+
 	public:
 		block(int np, int ps, int xlc, long block_number, enum wom_coding womCode, enum blockOverflowConfig=LINEAR);
 
@@ -81,8 +87,21 @@ class block {
 		int readRawBlock(uint8_t *buf);
 		void resetBlockWithoutErase();
 
+		int checkPageEmpty(int pbn);
+		int getCurrentPhysicalPage();
+		void setCurrentPhysicalPage(int pbn);
+
 		void getGenerations(int *);
 		void eraseBlock();
+
+		void setBAge(int n);
+		int getBAge();
+
+		void accessB();
+		int getAccessB();
+
+		int getBErase();
+
 		~block();
 };
 

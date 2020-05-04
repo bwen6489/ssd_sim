@@ -9,13 +9,9 @@ find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
 # Builds SSD Emulator
-add_executable(emulator page_md.cpp page_group.cpp coder.cpp block.cpp ssd.cpp main.cpp)
+add_executable(emulator page_md.cpp page_group.cpp coder.cpp block.cpp ssd.cpp main.cpp l2p.cpp)
  
-add_executable(main_gc page_md.cpp page_group.cpp coder.cpp block.cpp ssd.cpp main_gc.cpp)
-
-add_executable(main_visualize page_md.cpp page_group.cpp coder.cpp block.cpp ssd.cpp main_visualize.cpp)
-
-add_executable(main_parallel page_md.cpp page_group.cpp coder.cpp block.cpp ssd.cpp main_parallel.cpp)
+add_executable(main_gc page_md.cpp page_group.cpp coder.cpp block.cpp ssd.cpp l2p.cpp main_gc.cpp)
 
 add_executable(tests test.cpp)
 

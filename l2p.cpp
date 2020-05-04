@@ -1,6 +1,8 @@
 #include "l2p.hpp"
 #include <iostream>
 
+#include <cassert>
+
 // note that logical pages greater than physical page size can be mapped to the device.
 // however, the number of logical pages cannot be greater than the physical page limit.
 
@@ -10,8 +12,8 @@ l2p :: l2p(unsigned long size, unsigned long np_per_block) {
 	for (i = 0 ; i < size ; i++) {
 		l2pMap[i] = LONG_MAX;
 		p2lMap[i] = LONG_MAX;
+		lMapupdate[i] = 0;
 	}
-
 	current_physical_page=0;
 	num_pages_per_block=np_per_block;
 	map_full=false;
@@ -32,7 +34,19 @@ void l2p:: invalidateL2PMap(unsigned long lbn)
 	assert(p2lMap[old_pbn] != LONG_MAX);
 	l2pMap[lbn] = LONG_MAX;
 	p2lMap[old_pbn] = LONG_MAX;
+	lMapupdate[lbn]++;
 	num_page_allocated--;
+}
+
+unsigned long l2p :: getUpdate()
+{
+	long max=0;
+	for (int i=0;i<mapsize;i++)
+	{
+		if (lMapupdate[i]>max)
+			max=lMapupdate[i];
+	}
+	return max;
 }
 
 // overwrite leads to older PBN being marked for deletion.
