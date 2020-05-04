@@ -20,6 +20,11 @@ block:: block(int np, int ps, int xlc, long bno, enum wom_coding womCode=NO_WOM,
 	}
 	C = new coder((enum wom_coding)womCode);
 	boc=b;
+	current_physical_page=0;
+
+	bage=1;
+	access_count==0;
+	erase_count==1;
 	/*
 	if (xlc == 3 && womCode >= WOM_2_4_CODE1) {
 		printf("TLC Flash not supported for WOM 2,4 Codes,\
@@ -40,10 +45,6 @@ block:: ~block()
 	{
 		delete page_array[i];
 	}
-<<<<<<< HEAD
-=======
-	delete C;
->>>>>>> b19e4f1... Fix memory leak in block
 }
 
 enum blockStatus block:: getBlockStatus()
@@ -118,6 +119,9 @@ void block:: eraseBlock()
 	for (int i = 0 ; i < num_pages ; i++) {
 		page_array[i]->erase_page();
 	}
+	current_physical_page = 0;
+	cout<<erase_count;
+	erase_count++;
 }
 
 int block:: getNumValidPages() {
@@ -135,15 +139,6 @@ int block:: getNumPages() {
 int block:: setNumPages(int NP) {
 	num_pages = NP;
 }
-/*
-int block:: getCurrentPageNumber() {
-	return currentPageNumber;
-}
-
-int block:: setCurrentPageNumber(int CPN) {
-	currentPageNumber = CPN;
-}
-*/
 /* this should only return valid pages, that are programmed,
  * but are not empty.
 */
@@ -248,6 +243,10 @@ int block :: writeToBlock(uint8_t *ip_write_block, int data_size)
 	if (data_size > lblock_size) {
 		return -1;
 	}
+	else if (data_size == lblock_size){
+		setBlockStatus(FULL);
+	}
+	else setBlockStatus(PARTIAL_FULL);
 
 	logical_page *prev_code_page = new logical_page(physical_page_size);
 	logical_page *new_code_page  = new logical_page(physical_page_size);
@@ -270,7 +269,7 @@ int block :: writeToBlock(uint8_t *ip_write_block, int data_size)
 			assert(ret == physical_page_size);
 		}
 		// copy block to be written from write_block to write_page.
-	//	printf("page %d/%d offset %d/%d\n", ppn, getNumPages(), write_buf_offset , data_size);
+		//printf("page %d/%d offset %d/%d\n", ppn, getNumPages(), write_logical_buf_offset , data_size);
 		memcpy(write_page, ip_write_block + write_logical_buf_offset, logical_page_size);
 		bits_writable = C->encode(write_page, prev_code_page->getBuf(), new_code_page->getBuf(), logical_page_size, validBitmap, start_physical_page_offset);
 		if(bits_writable == physical_page_size * 8) {
@@ -338,9 +337,9 @@ int block :: writeToBlock(uint8_t *ip_write_block, int data_size)
 	delete new_code_page;
 	new_code_page=nullptr;
 
-	delete []write_page;
+	delete write_page;
 	write_page=nullptr;
-	delete []zeroed_page;
+	delete zeroed_page;
 	zeroed_page = nullptr;
 
 	return write_logical_buf_offset;
@@ -514,6 +513,45 @@ void block :: resetBlockWithoutErase()
 	for (i = 0 ; i < page_array.size() ; i++) {
 		page_array[i]->resetPageWithoutErase();
 	}
+}
+
+int block :: checkPageEmpty(int pbn){
+	return page_array[pbn]->isPageEmpty();
+}
+
+void block :: setCurrentPhysicalPage(int pn)
+{
+	current_physical_page = pn;
+}
+
+int block :: getCurrentPhysicalPage()
+{
+	return current_physical_page;
+}
+
+int block :: getBAge()
+{
+	return bage;
+}
+
+void block :: setBAge(int n)
+{
+	bage=n;
+}
+
+void block :: accessB()
+{
+	access_count++;
+}
+		
+int block :: getAccessB()
+{
+	return access_count;
+}
+
+int block :: getBErase()
+{
+	return erase_count;
 }
 
 logical_page :: logical_page (uint32_t bs)
